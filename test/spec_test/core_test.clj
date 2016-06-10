@@ -12,8 +12,7 @@
   (valid? ::product/sku {::product/code "abc"})
 
   (valid? ::product/bundle {::product/code "123"
-                            ::product/contents [{::product/code "abc"
-                                                 ::product/quantity 4}]})
+                            ::product/quantity 4})
   
   (valid? ::product/composite {::product/code "abcdef"
                                ::product/contents [{::product/code "abc" ::product/quantity 1}
