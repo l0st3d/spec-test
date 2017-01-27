@@ -49,10 +49,6 @@
 
 (defmulti set-customer #(::customer/type (second %&)))
 
-(s/fdef set-customer
-        :args (s/tuple ::order ::customer/customer)
-        :ret (s/and ::invoice delivery-address-set? billing-address-set?))
-
 (defmethod set-customer ::customer/person [order customer]
   (-> order
       (assoc ::customer customer)
@@ -64,6 +60,10 @@
       (assoc ::customer company)
       (assoc ::delivery-address (first (::customer/delivery-addresses company)))
       (assoc ::billing-address (::customer/address company))))
+
+(s/fdef set-customer
+        :args (s/cat :order ::order :customer ::customer/customer)
+        :ret (s/and ::invoice delivery-address-set? billing-address-set?))
 
 (s/fdef add-line
         :args (s/or :non-stock-line (s/cat :order       ::invoice
@@ -78,5 +78,3 @@
 (s/fdef new
         :args (s/cat)
         :ret (s/and ::invoice price-matches-total?))
-
-(s/instrument-ns 'spec-test.domain.order)
