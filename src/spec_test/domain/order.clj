@@ -10,13 +10,15 @@
 (s/def ::price bigdec?)
 
 (s/def ::product (s/keys :req [::product/code] :opt [::product/description]))
-;; (s/def ::customer (s/multi-spec customer/type ::customer/type))
 (s/def ::charge (s/keys :req [::description ::price] :opt [::product ::quantity])) ;; TODO should be an or?
 (s/def ::lines (s/* ::charge))
 (s/def ::invoice (s/keys :req [::price] :opt [::customer/customer ::lines ::delivery-address ::billing-address]))
 
 (defn- calculate-total [order]
-  (->> order ::lines (map (juxt ::price ::quantity)) (map #(* (first %) (or (second %) 1))) (apply + 0.0M)))
+  (->> order ::lines
+       (map (juxt ::price ::quantity))
+       (map #(* (first %) (or (second %) 1)))
+       (apply + 0.0M)))
 
 (defn update-total [order]
   (assoc order ::price (calculate-total order)))
@@ -73,7 +75,15 @@
                                          :product       ::product
                                          :quantity      ::quantity
                                          :price         ::price))
-        :ret (s/and ::invoice price-matches-total?))
+        :ret (s/and ::invoice price-matches-total?) ;TODO spec is defined in terms of domain - ciruclar reasoning mistake??
+        :fn (fn [{{:keys [lines]} :ret {:keys [non-stock-line product-line]} :args}]
+              (let [content-matches? (cond non-stock-line #(.contains % (str (:description non-stock-line)))                                                                
+                                           product-line   #(and (.contains % (str (::product/quantity (:product product-line))))
+                                                                (.contains % (str (::product/code (:product product-line))))
+                                                                (or (nil? (::product/description (:product product-line)))
+                                                                    (.contains % (str (::product/description (:product product-line))))))
+                                           :else          (constantly nil))]
+                (->> lines (map :description) (some content-matches?)))))
 
 (s/fdef new
         :args (s/cat)

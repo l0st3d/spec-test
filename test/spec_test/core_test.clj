@@ -74,4 +74,11 @@
 
 (deftest d-test
   (testing "generators"
-    ))
+    (is (= (st/summarize-results (st/check (st/enumerate-namespace 'spec-test.domain.order)))
+           {:total 3, :check-passed 3}))
+    (is (= (st/summarize-results (st/check (st/enumerate-namespace 'spec-test.domain.customer)))
+           {:total 0}))
+    (is (= (st/summarize-results (st/check (st/enumerate-namespace 'spec-test.domain.product)))
+           {:total 0}))
+    (is (= (st/summarize-results (st/check (st/enumerate-namespace 'spec-test.domain.repository)))
+           {:total 0}))))
