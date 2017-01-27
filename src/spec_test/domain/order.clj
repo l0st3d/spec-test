@@ -63,28 +63,3 @@
       (assoc ::delivery-address (or first-delivery-address address))
       (assoc ::billing-address address)))
 
-(s/fdef set-customer
-        :args (s/cat :order ::invoice :customer ::customer/customer)
-        :ret (s/and ::invoice delivery-address-set? billing-address-set?))
-
-(s/fdef add-line
-        :args (s/or :non-stock-line (s/cat :order       ::invoice
-                                           :description ::description
-                                           :price       ::price)
-                    :product-line (s/cat :order         ::invoice
-                                         :product       ::product
-                                         :quantity      ::quantity
-                                         :price         ::price))
-        :ret (s/and ::invoice price-matches-total?) ;TODO spec is defined in terms of domain - ciruclar reasoning mistake??
-        :fn (fn [{{:keys [lines]} :ret {:keys [non-stock-line product-line]} :args}]
-              (let [content-matches? (cond non-stock-line #(.contains % (str (:description non-stock-line)))                                                                
-                                           product-line   #(and (.contains % (str (::product/quantity (:product product-line))))
-                                                                (.contains % (str (::product/code (:product product-line))))
-                                                                (or (nil? (::product/description (:product product-line)))
-                                                                    (.contains % (str (::product/description (:product product-line))))))
-                                           :else          (constantly nil))]
-                (->> lines (map :description) (some content-matches?)))))
-
-(s/fdef new
-        :args (s/cat)
-        :ret (s/and ::invoice price-matches-total?))

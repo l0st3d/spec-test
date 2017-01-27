@@ -70,6 +70,32 @@
       (is (nil? (s/explain-data ::customer/person p)))
       (is (nil? (s/explain-data ::order/invoice (order/set-customer new-order p)))))))
 
+(s/fdef order/set-customer
+        :args (s/cat :order ::order/invoice :customer ::customer/customer)
+        :ret (s/and ::invoice order/delivery-address-set? order/billing-address-set?))
+
+(s/fdef order/add-line
+        :args (s/or :non-stock-line (s/cat :order       ::order/invoice
+                                           :description ::order/description
+                                           :price       ::order/price)
+                    :product-line (s/cat :order         ::order/invoice
+                                         :product       ::order/product
+                                         :quantity      ::order/quantity
+                                         :price         ::order/price))
+        :ret (s/and ::order/invoice order/price-matches-total?) ;TODO spec is defined in terms of domain - ciruclar reasoning mistake??
+        :fn (fn [{{:keys [lines]} :ret {:keys [non-stock-line product-line]} :args}]
+              (let [content-matches? (cond non-stock-line #(.contains % (str (:description non-stock-line)))                                                                
+                                           product-line   #(and (.contains % (str (::product/quantity (:product product-line))))
+                                                                (.contains % (str (::product/code (:product product-line))))
+                                                                (or (nil? (::product/description (:product product-line)))
+                                                                    (.contains % (str (::product/description (:product product-line))))))
+                                           :else          (constantly nil))]
+                (or (empty? lines) (->> lines (map :description) (some content-matches?))))))
+
+(s/fdef order/new
+        :args (s/cat)
+        :ret (s/and ::invoice order/price-matches-total?))
+
 (st/instrument)
 
 (deftest d-test
