@@ -55,14 +55,14 @@
       (assoc ::delivery-address (::customer/address customer))
       (assoc ::billing-address (::customer/address customer))))
 
-(defmethod set-customer ::customer/company [order company]
+(defmethod set-customer ::customer/company [order {address ::customer/address [first-delivery-address] ::customer/delivery-addresses :as company}]
   (-> order
       (assoc ::customer company)
-      (assoc ::delivery-address (first (::customer/delivery-addresses company)))
-      (assoc ::billing-address (::customer/address company))))
+      (assoc ::delivery-address (or first-delivery-address address))
+      (assoc ::billing-address address)))
 
 (s/fdef set-customer
-        :args (s/cat :order ::order :customer ::customer/customer)
+        :args (s/cat :order ::invoice :customer ::customer/customer)
         :ret (s/and ::invoice delivery-address-set? billing-address-set?))
 
 (s/fdef add-line

@@ -29,9 +29,9 @@
                  ::customer/delivery-addresses []
                  ::customer/type               ::customer/company}]
     (is (nil? (s/explain-data ::customer/customer person)))
-    (is (nil? (s/explain-data customer/type person)))
+    (is (nil? (s/explain-data customer/customer-type person)))
     (is (nil? (s/explain-data ::customer/customer company)))
-    (is (nil? (s/explain-data customer/type company))))
+    (is (nil? (s/explain-data customer/customer-type company))))
 
   (is (nil? (s/explain-data ::order/invoice {::order/customer {::customer/name      "12"
                                                                ::customer/address   "my test house"
@@ -59,22 +59,19 @@
 
 (deftest c-test
   (testing "Domain"
-    (let [p         (g ::customer/customer)
-          ;; _ (is (nil? p))
+    (let [p         (g ::customer/person)
           new-order (-> (order/new)
                         (order/add-line (g ::product/sku) (g ::order/quantity) (g ::order/price))
-                        (order/add-line (g ::order/description) (g ::order/price)))
-          ;; new-order (order/set-customer new-order p)
-          ]
+                        (order/add-line (g ::order/description) (g ::order/price)))]
       (is (nil? (s/explain-data ::order/invoice new-order)))
       (is (order/price-matches-total? new-order))
       (is (nil? (s/explain-data ::order/invoice new-order)))
-      (is (nil? (s/explain-data customer/type p)))
+      (is (nil? (s/explain-data customer/customer-type p)))
+      (is (nil? (s/explain-data ::customer/person p)))
       (is (nil? (s/explain-data ::order/invoice (order/set-customer new-order p)))))))
 
+(st/instrument)
 
-;; In: [0] val:
-;; ({:spec-test.domain.order/price -453.905890562222340861M, :spec-test.domain.order/lines ({:spec-test.domain.order/product {:spec-test.domain.product/code "50sUoS1952kc9ruVe", :spec-test.domain.product/description "9oO3UP6rRwUP23826NTXC7J4W"}, :spec-test.domain.order/quantity 7346, :spec-test.domain.order/description "7346 x 50sUoS1952kc9ruVe 9oO3UP6rRwUP23826NTXC7J4W", :spec-test.domain.order/price -0.061786429781932384M} {:spec-test.domain.order/description "321s5psyz4", :spec-test.domain.order/price -0.022777384147047997M})}
-;;  {:spec-test.domain.customer/name "Zhz04", :spec-test.domain.customer/address "Hp", :spec-test.domain.customer/honorific "Miss"})
-
-;; fails at: [:args] predicate: (cat :order :spec-test.domain.order/order :customer :spec-test.domain.customer/customer),  Extra input
+(deftest d-test
+  (testing "generators"
+    ))

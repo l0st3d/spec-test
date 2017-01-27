@@ -4,17 +4,20 @@
 (s/def ::address string?)
 (s/def ::name string?)
 (s/def ::honorific #{"Mr" "Mrs" "Dr" "Ms" "Miss" "Mx" "Prof"})
-(s/def ::type keyword?)
+(s/def ::type #{::person ::company})
 
 (s/def ::contacts (s/* ::person))
 (s/def ::delivery-addresses (s/* ::address))
 
-(defmulti type ::type)
+(s/def ::person (s/and (s/keys :req [::name ::type ::address ::honorific])
+                       #(= ::person (::type %))))
+(s/def ::company (s/and (s/keys :req [::name ::type ::address ::contacts ::delivery-addresses])
+                        #(= ::company (::type %))))
 
-(defmethod type ::person [_]
-  (s/keys :req [::name ::type ::address ::honorific]))
+(defmulti customer-type ::type)
 
-(defmethod type ::company [_]
-  (s/keys :req [::name ::type ::address ::contacts ::delivery-addresses]))
+(defmethod customer-type ::person [p] ::person)
 
-(s/def ::customer (s/multi-spec type ::type))
+(defmethod customer-type ::company [c] ::company)
+
+(s/def ::customer (s/multi-spec customer-type ::type))
