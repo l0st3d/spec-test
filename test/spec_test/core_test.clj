@@ -72,7 +72,7 @@
 
 (s/fdef order/set-customer
         :args (s/cat :order ::order/invoice :customer ::customer/customer)
-        :ret (s/and ::invoice order/delivery-address-set? order/billing-address-set?))
+        :ret (s/and ::order/invoice order/delivery-address-set? order/billing-address-set?))
 
 (s/fdef order/add-line
         :args (s/or :non-stock-line (s/cat :order       ::order/invoice
@@ -94,17 +94,16 @@
 
 (s/fdef order/new
         :args (s/cat)
-        :ret (s/and ::invoice order/price-matches-total?))
+        :ret (s/and ::order/invoice order/price-matches-total?))
 
 (st/instrument)
 
+(defn ns-ok? [n]
+  (is (every? (comp :result :clojure.spec.test.check/ret) (st/check (st/enumerate-namespace n)))))
+
 (deftest d-test
   (testing "generators"
-    (is (= (st/summarize-results (st/check (st/enumerate-namespace 'spec-test.domain.order)))
-           {:total 3, :check-passed 3}))
-    (is (= (st/summarize-results (st/check (st/enumerate-namespace 'spec-test.domain.customer)))
-           {:total 0}))
-    (is (= (st/summarize-results (st/check (st/enumerate-namespace 'spec-test.domain.product)))
-           {:total 0}))
-    (is (= (st/summarize-results (st/check (st/enumerate-namespace 'spec-test.domain.repository)))
-           {:total 0}))))
+    (ns-ok? 'spec-test.domain.order)
+    (ns-ok? 'spec-test.domain.customer)
+    (ns-ok? 'spec-test.domain.product)
+    (ns-ok? 'spec-test.domain.repository)))
